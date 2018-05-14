@@ -1,7 +1,7 @@
 package abstracts;
 
 public abstract class ErrorObject <T> {
-    T errors;
+    private T errors;
 
     public ErrorObject() {
     }

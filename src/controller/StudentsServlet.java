@@ -2,10 +2,13 @@ package controller;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
+import abstracts.ErrorObject;
 import abstracts.JsonObject;
 import com.google.gson.Gson;
 import com.googlecode.objectify.Key;
 import entity.Student;
+import entity.error.EOSingleResource;
+import entity.error.ErrorResource;
 import entity.json.JOMultiResource;
 import entity.json.JOSingleResource;
 import entity.json.JsonResource;
@@ -35,13 +38,16 @@ public class StudentsServlet extends HttpServlet {
             email = attr.get("email").toString();
             phone = attr.get("phone").toString();
             address = attr.get("address").toString();
+            if (!attr.get("gender").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Gender must be integer");
             gender = (int) Math.floor((double) attr.get("gender"));
-            System.out.println(attr.get("gender").getClass().getSimpleName());
+            if (!attr.get("birthday").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Birthday must be long");
             birthday = (long) Math.floor((double) attr.get("birthday"));
         } catch (Exception e) {
-            resp.setStatus(400);
-            resp.getWriter().print(e);
-            e.printStackTrace();
+            ErrorResource er = ErrorResource.getInstance("500", "Error with Object constructor", e.getMessage());
+            EOSingleResource eosr = new EOSingleResource();
+            eosr.setErrors(er);
+            resp.setStatus(500);
+            resp.getWriter().print(gson.toJson(eosr));
             return;
         }
 
@@ -71,7 +77,8 @@ public class StudentsServlet extends HttpServlet {
                 System.err.println("Failed when parse the parameter!");
             }
 
-            List<Student> ls = ofy().load().type(Student.class).list();
+            List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page-1)*limit).list();
+            total = ofy().load().type(Student.class).count();
             List<JsonResource> ljr = new ArrayList<>();
             for (Student s: ls) {
                 ljr.add(JsonResource.getInstance(s));
@@ -80,7 +87,7 @@ public class StudentsServlet extends HttpServlet {
             HashMap<String, Object> meta = new HashMap<>();
             meta.put("limit", limit);
             meta.put("page", page);
-            meta.put("total", ofy().load().type(Student.class).count());
+            meta.put("total", total);
 
             jo = new JOMultiResource();
             jo.setData(ljr);

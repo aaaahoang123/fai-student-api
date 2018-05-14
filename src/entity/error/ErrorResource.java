@@ -5,6 +5,13 @@ public class ErrorResource {
     private String title;
     private String detail;
 
+    public static ErrorResource getInstance(String code, String title, String detail) {
+        ErrorResource e = new ErrorResource();
+        e.setCode(code);
+        e.setTitle(title);
+        e.setDetail(detail);
+        return e;
+    }
     public static ErrorResource getInstance() {
         return new ErrorResource();
     }
