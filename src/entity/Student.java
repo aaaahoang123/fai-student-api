@@ -17,14 +17,14 @@ public class Student {
     private String phone;
     private String address;
     private long birthday;
+    private String avatar;
     @Index
     private long createdAt;
     private long updatedAt;
     private int status;
-
     public Student() {}
 
-    public Student(long id, String rollNumber, String name, int gender, String email, String phone, String address, long birthday, long createdAt, long updatedAt, int status) {
+    public Student(long id, String rollNumber, String name, int gender, String email, String phone, String address, long birthday, String avatar, long createdAt, long updatedAt, int status) {
         this.id = id;
         this.rollNumber = rollNumber;
         this.name = name;
@@ -36,6 +36,7 @@ public class Student {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.status = status;
+        this.avatar = avatar;
     }
 
     public long getId() {
@@ -124,5 +125,13 @@ public class Student {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 }

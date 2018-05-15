@@ -12,6 +12,7 @@ public class ErrorResource {
         e.setDetail(detail);
         return e;
     }
+
     public static ErrorResource getInstance() {
         return new ErrorResource();
     }
