@@ -26,11 +26,13 @@ public class StudentsServlet extends HttpServlet {
     Gson gson = new Gson();
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doOptions(req, resp);
         Map<String, Object> attr = null;
         String rollNumber, name, email, phone, address, avatar;
         int gender, status;
         long birthday, nowMls;
         try {
+
             attr = gson.fromJson(BodyParser.parseBody(req), JOSingleResource.class).getData().getAttributes();
             rollNumber = attr.get("rollNumber").toString();
             name = attr.get("name").toString();
@@ -73,7 +75,17 @@ public class StudentsServlet extends HttpServlet {
         else {
             jo = getOne(req, resp, path);
         }
-        resp.getWriter().print(gson.toJson(jo));
+
+        doOptions(req, resp);
+        resp.getWriter().write(gson.toJson(jo));
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods","GET, OPTIONS, HEAD, PUT, POST");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Origin, Token");
     }
 
     private JsonObject getList(HttpServletRequest req, HttpServletResponse resp) {
