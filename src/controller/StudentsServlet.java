@@ -10,6 +10,7 @@ import entity.error.ErrorResource;
 import entity.json.JOMultiResource;
 import entity.json.JOSingleResource;
 import entity.json.JsonResource;
+import utility.BodyParser;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -30,7 +31,7 @@ public class StudentsServlet extends HttpServlet {
         int gender, status;
         long birthday, nowMls;
         try {
-            attr = gson.fromJson((String) req.getAttribute("body"), JOSingleResource.class).getData().getAttributes();
+            attr = gson.fromJson(BodyParser.parseBody(req), JOSingleResource.class).getData().getAttributes();
             rollNumber = attr.get("rollNumber").toString();
             name = attr.get("name").toString();
             email = attr.get("email").toString();
@@ -41,7 +42,6 @@ public class StudentsServlet extends HttpServlet {
             if (!attr.get("birthday").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Birthday must be long");
             birthday = (long) Math.floor((double) attr.get("birthday"));
             avatar = attr.get("avatar").toString();
-
         } catch (Exception e) {
             ErrorResource er = ErrorResource.getInstance("500", "Error with Object constructor", e.getMessage());
             EOSingleResource eosr = new EOSingleResource();
@@ -69,43 +69,8 @@ public class StudentsServlet extends HttpServlet {
         JsonObject jo;
         if (path.equals("")) {
             jo = getList(req, resp);
-//            int limit = 10, page = 1, total;
-//            String temp;
-//            try {
-//                if ((temp = req.getParameter("page")) != null) page = Integer.parseInt(temp);
-//                if ((temp = req.getParameter("limit")) != null) limit = Integer.parseInt(temp);
-//            } catch (Exception e) {
-//                System.err.println("Failed when parse the parameter!");
-//            }
-//
-//            List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page-1)*limit).list();
-//            total = ofy().load().type(Student.class).count();
-//            List<JsonResource> ljr = new ArrayList<>();
-//            for (Student s: ls) {
-//                ljr.add(JsonResource.getInstance(s));
-//            }
-//
-//            HashMap<String, Object> meta = new HashMap<>();
-//            meta.put("limit", limit);
-//            meta.put("page", page);
-//            meta.put("total", total);
-//
-//            jo = new JOMultiResource();
-//            jo.setData(ljr);
-//            jo.setMeta(meta);
         }
         else {
-//            long id;
-//            try {
-//                id = Long.parseLong(path);
-//            } catch (Exception e) {
-//                resp.getWriter().print("Invalid id! Error when parse the id!");
-//                return;
-//            }
-//
-//            Student s = ofy().load().type(Student.class).id(id).now();
-//            jo = new JOSingleResource();
-//            jo.setData(JsonResource.getInstance(s));
             jo = getOne(req, resp, path);
         }
         resp.getWriter().print(gson.toJson(jo));

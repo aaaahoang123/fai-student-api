@@ -14,7 +14,6 @@ public class CustomFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        request.setAttribute("body", BodyParser.parseBody(request));
         ObjectifyService.register(Student.class);
         chain.doFilter(request, response);
     }
