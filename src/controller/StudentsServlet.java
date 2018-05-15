@@ -3,13 +3,14 @@ package controller;
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 import abstracts.JsonObject;
-import com.google.gson.Gson;
+import com.google.appengine.repackaged.com.google.gson.Gson;
 import entity.Student;
-import entity.error.EOSingleResource;
+import entity.error.ErrorAPI;
 import entity.error.ErrorResource;
 import entity.json.JOMultiResource;
 import entity.json.JOSingleResource;
 import entity.json.JsonResource;
+import utility.Validator;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 public class StudentsServlet extends HttpServlet {
     Gson gson = new Gson();
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, Object> attr = null;
@@ -36,18 +38,19 @@ public class StudentsServlet extends HttpServlet {
             email = attr.get("email").toString();
             phone = attr.get("phone").toString();
             address = attr.get("address").toString();
-            if (!attr.get("gender").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Gender must be integer");
+            if (!attr.get("gender").getClass().getSimpleName().equals("Double"))
+                throw new ClassCastException("Gender must be integer");
             gender = (int) Math.floor((double) attr.get("gender"));
-            if (!attr.get("birthday").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Birthday must be long");
+            if (!attr.get("birthday").getClass().getSimpleName().equals("Double"))
+                throw new ClassCastException("Birthday must be long");
             birthday = (long) Math.floor((double) attr.get("birthday"));
             avatar = attr.get("avatar").toString();
 
         } catch (Exception e) {
-            ErrorResource er = ErrorResource.getInstance("500", "Error with Object constructor", e.getMessage());
-            EOSingleResource eosr = new EOSingleResource();
-            eosr.setErrors(er);
-            resp.setStatus(500);
-            resp.getWriter().print(gson.toJson(eosr));
+            ErrorAPI errorAPI = new ErrorAPI();
+            errorAPI.addRs(ErrorResource.getInstance("400", "Format Data invalid", e.getMessage()));
+            resp.setStatus(400);
+            resp.getWriter().print(gson.toJson(errorAPI));
             return;
         }
 
@@ -55,10 +58,19 @@ public class StudentsServlet extends HttpServlet {
         status = 1;
 
         Student s = new Student(nowMls, rollNumber, name, gender, email, phone, address, birthday, avatar, nowMls, nowMls, status);
+        List<ErrorResource> lErrors = Validator.getInstance().validateStudent(s);
+        if (lErrors.size() > 0) {
+            ErrorAPI errorAPI = new ErrorAPI();
+            errorAPI.setErrors(lErrors);
+            resp.setStatus(400);
+            resp.getWriter().print(new Gson().toJson(errorAPI));
+            return;
+        }
         ofy().save().entity(s).now();
         JOSingleResource jsr = new JOSingleResource();
         jsr.setData(JsonResource.getInstance(s));
         resp.getWriter().print(gson.toJson(jsr));
+
     }
 
     @Override
@@ -69,43 +81,7 @@ public class StudentsServlet extends HttpServlet {
         JsonObject jo;
         if (path.equals("")) {
             jo = getList(req, resp);
-//            int limit = 10, page = 1, total;
-//            String temp;
-//            try {
-//                if ((temp = req.getParameter("page")) != null) page = Integer.parseInt(temp);
-//                if ((temp = req.getParameter("limit")) != null) limit = Integer.parseInt(temp);
-//            } catch (Exception e) {
-//                System.err.println("Failed when parse the parameter!");
-//            }
-//
-//            List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page-1)*limit).list();
-//            total = ofy().load().type(Student.class).count();
-//            List<JsonResource> ljr = new ArrayList<>();
-//            for (Student s: ls) {
-//                ljr.add(JsonResource.getInstance(s));
-//            }
-//
-//            HashMap<String, Object> meta = new HashMap<>();
-//            meta.put("limit", limit);
-//            meta.put("page", page);
-//            meta.put("total", total);
-//
-//            jo = new JOMultiResource();
-//            jo.setData(ljr);
-//            jo.setMeta(meta);
-        }
-        else {
-//            long id;
-//            try {
-//                id = Long.parseLong(path);
-//            } catch (Exception e) {
-//                resp.getWriter().print("Invalid id! Error when parse the id!");
-//                return;
-//            }
-//
-//            Student s = ofy().load().type(Student.class).id(id).now();
-//            jo = new JOSingleResource();
-//            jo.setData(JsonResource.getInstance(s));
+        } else {
             jo = getOne(req, resp, path);
         }
         resp.getWriter().print(gson.toJson(jo));
@@ -121,10 +97,10 @@ public class StudentsServlet extends HttpServlet {
             System.err.println("Failed when parse the parameter!");
         }
 
-        List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page-1)*limit).list();
+        List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page - 1) * limit).list();
         total = ofy().load().type(Student.class).count();
         List<JsonResource> ljr = new ArrayList<>();
-        for (Student s: ls) {
+        for (Student s : ls) {
             ljr.add(JsonResource.getInstance(s));
         }
 

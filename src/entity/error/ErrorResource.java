@@ -1,5 +1,8 @@
 package entity.error;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ErrorResource {
     private String code;
     private String title;
@@ -40,4 +43,5 @@ public class ErrorResource {
     public void setDetail(String detail) {
         this.detail = detail;
     }
+
 }
