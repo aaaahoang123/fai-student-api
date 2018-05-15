@@ -30,4 +30,23 @@
         <url-pattern>/api/students/*</url-pattern>
     </servlet-mapping>
 
+
+    <servlet>
+        <servlet-name>Upload</servlet-name>
+        <servlet-class>controller.UploadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Upload</servlet-name>
+        <url-pattern>/api/upload/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ViewFile</servlet-name>
+        <servlet-class>controller.ShowFileServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ViewFile</servlet-name>
+        <url-pattern>/api/show-file/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>

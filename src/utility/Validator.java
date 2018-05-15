@@ -18,49 +18,37 @@ public class Validator {
 
         // validate rollnumber
         if (checkNull(student.getRollNumber())) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber not null.");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber not null."));
         } else if (!checkCharacter(student.getRollNumber(), "[A-Za-z0-9]+")) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber include only: 0-9,A-Z, a-z");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber include only: 0-9,A-Z, a-z"));
         } else if (!checkLength(student.getRollNumber(), 6)) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber must have at least 6 character.");
-            listError.add(er);
-        } else if (checkRollnumerExist(student.getRollNumber())) {
-            ErrorResource er = ErrorResource.getInstance("409", "Rollnumber Conflict", "RollNumber existed");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber must have at least 6 character."));
         }
 
         // validate name
         if (checkNull(student.getName())) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Name", "Name not null");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Name", "Name not null"));
         } else if (!checkCharacter(student.getName(), "[\\p{L}\\s]+")) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Name", "Name include only: a-z, A-Z, space");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Name", "Name include only: a-z, A-Z, space"));
         } else if (!checkLength(student.getName(), 5)) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Name", "Name must have least at 5 character");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Name", "Name must have least at 5 character"));
         }
 
         // validate gender
         if (student.getGender() != 0 && student.getGender() != 1) {
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Gender", "Gender must 0 or 1");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Gender", "Gender must 0 or 1"));
         }
 
         // validate email
         if(checkNull(student.getEmail())){
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Email","Email not null");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400", "Invalid Email","Email not null"));
         }else if(!checkCharacter(student.getEmail(), "^([a-zA-Z0-9_\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9]{2,4})+$")){
-            ErrorResource er = ErrorResource.getInstance("400", "Invalid Email", "Email invalid, ex valid: example@has.com");
+            listError.add(ErrorResource.getInstance("400", "Invalid Email", "Email invalid, ex valid: example@has.com"));
         }
 
         //validate phone
         if(checkNull(student.getPhone())){
-            ErrorResource er = ErrorResource.getInstance("400","Invalid Phone", "Phone not null");
-            listError.add(er);
+            listError.add(ErrorResource.getInstance("400","Invalid Phone", "Phone not null"));
         }else if(!checkCharacter(student.getPhone(),"[0-9\\s]+")){
             listError.add(ErrorResource.getInstance("400", "Invalid Phone", "Phone include only 0-9,space"));
         }else if(!checkLength(student.getPhone(),10)){
@@ -102,7 +90,7 @@ public class Validator {
         return true;
     }
 
-    public boolean checkRollnumerExist(String rollNumber) {
+    public static boolean checkRollnumerExist(String rollNumber) {
         Student st = ObjectifyService.ofy().load().type(Student.class).filter("rollNumber", rollNumber).first().now();
         if (st != null) {
             return true;

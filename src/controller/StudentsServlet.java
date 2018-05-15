@@ -11,6 +11,8 @@ import entity.json.JOMultiResource;
 import entity.json.JOSingleResource;
 import entity.json.JsonResource;
 import utility.Validator;
+import utility.BodyParser;
+
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -27,12 +29,14 @@ public class StudentsServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doOptions(req, resp);
         Map<String, Object> attr = null;
         String rollNumber, name, email, phone, address, avatar;
         int gender, status;
         long birthday, nowMls;
         try {
-            attr = gson.fromJson((String) req.getAttribute("body"), JOSingleResource.class).getData().getAttributes();
+
+            attr = gson.fromJson(BodyParser.parseBody(req), JOSingleResource.class).getData().getAttributes();
             rollNumber = attr.get("rollNumber").toString();
             name = attr.get("name").toString();
             email = attr.get("email").toString();
@@ -45,7 +49,6 @@ public class StudentsServlet extends HttpServlet {
                 throw new ClassCastException("Birthday must be long");
             birthday = (long) Math.floor((double) attr.get("birthday"));
             avatar = attr.get("avatar").toString();
-
         } catch (Exception e) {
             ErrorAPI errorAPI = new ErrorAPI();
             errorAPI.addRs(ErrorResource.getInstance("400", "Format Data invalid", e.getMessage()));
@@ -59,18 +62,24 @@ public class StudentsServlet extends HttpServlet {
 
         Student s = new Student(nowMls, rollNumber, name, gender, email, phone, address, birthday, avatar, nowMls, nowMls, status);
         List<ErrorResource> lErrors = Validator.getInstance().validateStudent(s);
+        ErrorAPI errorAPI = new ErrorAPI();
         if (lErrors.size() > 0) {
-            ErrorAPI errorAPI = new ErrorAPI();
             errorAPI.setErrors(lErrors);
             resp.setStatus(400);
-            resp.getWriter().print(new Gson().toJson(errorAPI));
+            resp.getWriter().print(gson.toJson(errorAPI));
+            return;
+        }
+        if (Validator.checkRollnumerExist(s.getRollNumber())) {
+            errorAPI.addRs(ErrorResource.getInstance("409", "Rollnumber Conflict", "RollNumber existed"));
+            resp.setStatus(409);
+            resp.getWriter().print(gson.toJson(errorAPI));
             return;
         }
         ofy().save().entity(s).now();
         JOSingleResource jsr = new JOSingleResource();
         jsr.setData(JsonResource.getInstance(s));
+        resp.setStatus(201);
         resp.getWriter().print(gson.toJson(jsr));
-
     }
 
     @Override
@@ -81,10 +90,21 @@ public class StudentsServlet extends HttpServlet {
         JsonObject jo;
         if (path.equals("")) {
             jo = getList(req, resp);
-        } else {
+        }
+        else {
             jo = getOne(req, resp, path);
         }
-        resp.getWriter().print(gson.toJson(jo));
+
+        doOptions(req, resp);
+        resp.getWriter().write(gson.toJson(jo));
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods","GET, OPTIONS, HEAD, PUT, POST");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Origin, Token");
     }
 
     private JsonObject getList(HttpServletRequest req, HttpServletResponse resp) {

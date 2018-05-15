@@ -13,14 +13,18 @@ public class BodyParser {
     /**
      * @Return a string of json, that the body of request
      */
-    public static String parseBody(ServletRequest request) throws IOException {
-
-        BufferedReader br = request.getReader();
+    public static String parseBody(ServletRequest request) {
         StringBuilder sb = new StringBuilder();
-        String temp;
-        while ((temp = br.readLine()) != null) {
-            sb.append(temp)
-                .append("\n");
+
+        try {
+            BufferedReader br = request.getReader();
+            String temp;
+            while ((temp = br.readLine()) != null) {
+                sb.append(temp)
+                        .append("\n");
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
 
         return sb.toString();
