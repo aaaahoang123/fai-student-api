@@ -22,6 +22,7 @@ public class Student {
     private long createdAt;
     private long updatedAt;
     private int status;
+
     public Student() {}
 
     public Student(long id, String rollNumber, String name, int gender, String email, String phone, String address, long birthday, String avatar, long createdAt, long updatedAt, int status) {

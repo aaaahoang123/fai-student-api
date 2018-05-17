@@ -3,13 +3,14 @@ package controller;
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 import abstracts.JsonObject;
-import com.google.gson.Gson;
+import com.google.appengine.repackaged.com.google.gson.Gson;
 import entity.Student;
-import entity.error.EOSingleResource;
+import entity.error.ErrorAPI;
 import entity.error.ErrorResource;
 import entity.json.JOMultiResource;
 import entity.json.JOSingleResource;
 import entity.json.JsonResource;
+import utility.Validator;
 import utility.BodyParser;
 
 import javax.servlet.ServletException;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 public class StudentsServlet extends HttpServlet {
     Gson gson = new Gson();
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doOptions(req, resp);
@@ -39,17 +41,18 @@ public class StudentsServlet extends HttpServlet {
             email = attr.get("email").toString();
             phone = attr.get("phone").toString();
             address = attr.get("address").toString();
-            if (!attr.get("gender").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Gender must be integer");
+            if (!attr.get("gender").getClass().getSimpleName().equals("Double"))
+                throw new ClassCastException("Gender must be integer");
             gender = (int) Math.floor((double) attr.get("gender"));
-            if (!attr.get("birthday").getClass().getSimpleName().equals("Double")) throw new ClassCastException("Birthday must be long");
+            if (!attr.get("birthday").getClass().getSimpleName().equals("Double"))
+                throw new ClassCastException("Birthday must be long");
             birthday = (long) Math.floor((double) attr.get("birthday"));
             avatar = attr.get("avatar").toString();
         } catch (Exception e) {
-            ErrorResource er = ErrorResource.getInstance("500", "Error with Object constructor", e.getMessage());
-            EOSingleResource eosr = new EOSingleResource();
-            eosr.setErrors(er);
-            resp.setStatus(500);
-            resp.getWriter().print(gson.toJson(eosr));
+            ErrorAPI errorAPI = new ErrorAPI();
+            errorAPI.addRs(ErrorResource.getInstance("400", "Format Data invalid", e.getMessage()));
+            resp.setStatus(400);
+            resp.getWriter().print(gson.toJson(errorAPI));
             return;
         }
 
@@ -57,9 +60,24 @@ public class StudentsServlet extends HttpServlet {
         status = 1;
 
         Student s = new Student(nowMls, rollNumber, name, gender, email, phone, address, birthday, avatar, nowMls, nowMls, status);
+        List<ErrorResource> lErrors = Validator.getInstance().validateStudent(s);
+        ErrorAPI errorAPI = new ErrorAPI();
+        if (lErrors.size() > 0) {
+            errorAPI.setErrors(lErrors);
+            resp.setStatus(400);
+            resp.getWriter().print(gson.toJson(errorAPI));
+            return;
+        }
+        if (Validator.checkRollnumerExist(s.getRollNumber())) {
+            errorAPI.addRs(ErrorResource.getInstance("409", "Rollnumber Conflict", "RollNumber existed"));
+            resp.setStatus(409);
+            resp.getWriter().print(gson.toJson(errorAPI));
+            return;
+        }
         ofy().save().entity(s).now();
         JOSingleResource jsr = new JOSingleResource();
         jsr.setData(JsonResource.getInstance(s));
+        resp.setStatus(201);
         resp.getWriter().print(gson.toJson(jsr));
     }
 
@@ -98,10 +116,10 @@ public class StudentsServlet extends HttpServlet {
             System.err.println("Failed when parse the parameter!");
         }
 
-        List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page-1)*limit).list();
+        List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page - 1) * limit).list();
         total = ofy().load().type(Student.class).count();
         List<JsonResource> ljr = new ArrayList<>();
-        for (Student s: ls) {
+        for (Student s : ls) {
             ljr.add(JsonResource.getInstance(s));
         }
 
