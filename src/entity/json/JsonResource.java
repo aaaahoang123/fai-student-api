@@ -1,5 +1,7 @@
 package entity.json;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.googlecode.objectify.annotation.Id;
 
 import java.lang.reflect.Field;
@@ -36,9 +38,14 @@ public class JsonResource {
         this.attributes = attributes;
     }
 
-    public static <T> JsonResource getInstance(T obj) {
+    /**
+     *
+     * @param T obj
+     * @param <T>
+     * @return get a JsonResource with an object
+     */
+    public static <T> JsonResource getExposeInstance(T obj) {
         JsonResource data = new JsonResource();
-        HashMap<String, Object> map = new HashMap<>();
 
         for (Field f:obj.getClass().getDeclaredFields()) {
             f.setAccessible(true);
@@ -47,14 +54,44 @@ public class JsonResource {
                     data.setId(f.get(obj).toString());
                     continue;
                 }
-                map.put(f.getName(), f.get(obj));
+                data.addAttribute(f.getName(), f.get(obj));
             } catch (IllegalAccessException e) {
                 System.out.println(e.getMessage());
             }
         }
         data.setType(obj.getClass().getSimpleName());
-        data.setAttributes(map);
         return data;
     }
 
+    /**
+     *
+     * @param type
+     * @param <T>
+     * @return an instance from this JsonResource, with the class of object
+     * If this resource has id, then put the id into attribute with field name annotate by @Id of objectify
+     * And then stringify HashMap<String, Object> this.attribute to json string, and then parse it with the input type
+     */
+    public <T> T getInstance(Class<T> type) throws JsonSyntaxException {
+        String idField = null;
+        if (this.id != null && this.id.length() > 0) {
+            for (Field f : type.getDeclaredFields()) {
+                if (f.isAnnotationPresent(com.googlecode.objectify.annotation.Id.class)) {
+                    idField = f.getName();
+                    break;
+                }
+            }
+        }
+        if (idField!=null) addAttribute(idField, this.id);
+
+        return new Gson().fromJson(getAttributeJsonString(), type);
+    }
+
+    public void addAttribute(String key, Object value) {
+        if (this.attributes == null) this.attributes = new HashMap<>();
+        this.attributes.put(key, value);
+    }
+
+    public String getAttributeJsonString() {
+        return new Gson().toJson(this.attributes);
+    }
 }

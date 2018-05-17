@@ -2,7 +2,7 @@ package abstracts;
 
 import java.util.Map;
 
-public abstract class JsonObject <T> {
+public abstract class JsonObject <T> implements RESTResponseDocument {
     T data;
     Map<String, Object> meta;
 
