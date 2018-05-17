@@ -102,7 +102,7 @@ public class RESTDocumentSingle implements RESTDocument {
         }
 
         public RESTDocumentSingle build(){
-            return new RESTDocumentSingle();
+            return new RESTDocumentSingle(this);
         }
     }
 }

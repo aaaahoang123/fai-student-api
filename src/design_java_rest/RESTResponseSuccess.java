@@ -25,7 +25,6 @@ import java.util.HashMap;
 public class RESTResponseSuccess extends RESTResponse {
 	private ArrayList<RESTResource> data;
 	private HashMap<String, Object> meta;
-	private boolean isMulti = false;
 
 	public RESTResponseSuccess(RESTGeneralSuccess define) {
 		this.code = define.code();
@@ -33,8 +32,8 @@ public class RESTResponseSuccess extends RESTResponse {
 
 	void buildResponseDocument() {
 		if (this.data != null && this.data.size() > 0) {
-			if (this.data.size() == 1 && !isMulti) {
-				this.document = new RESTDocumentSingle.Builder().setData(this.data.get(0)).setMeta(this.meta).build();
+			if (this.data.size() == 1) {
+				this.document = new RESTDocumentSingle.Builder().setData(this.data.get(0)).build();
 			} else {
 				this.document = new RESTDocumentMulti.Builder().setData(this.data).setMeta(this.meta).build();
 			}
@@ -74,15 +73,15 @@ public class RESTResponseSuccess extends RESTResponse {
 		return this;
 	}
 
-//	public <T> RESTResponseSuccess putData(RESTResource value) {
-//		if (this.data == null) {
-//			this.data = new ArrayList<RESTResource>();
-//		}
-//		if (value != null) {
-//			this.data.add(value);
-//		}
-//		return this;
-//	}
+	public <T> RESTResponseSuccess putData(RESTResource value) {
+		if (this.data == null) {
+			this.data = new ArrayList<RESTResource>();
+		}
+		if (value != null) {
+			this.data.add(value);
+		}
+		return this;
+	}
 
 	/**
 	 * Put many data to response document.
@@ -91,7 +90,6 @@ public class RESTResponseSuccess extends RESTResponse {
 	 *            MUST be a collection.
 	 */
 	public <T> RESTResponseSuccess putData(Collection<T> listValue) {
-		this.isMulti = true;
 		if (this.data == null) {
 			this.data = new ArrayList<RESTResource>();
 		}

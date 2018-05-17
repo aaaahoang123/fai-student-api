@@ -22,7 +22,7 @@ public class RESTHandle {
         resp.setHeader(RESTConstantHttp.ACCESS_CONTROL_ALLOW_METHODS,
                 RESTStringUtil.joinCollectionString(acceptMethods, ","));
         resp.setHeader(RESTConstantHttp.ACCESS_CONTROL_ALLOW_HEADERS,
-                RESTConstantHttp.HEADER_CONTENT_TYPE + ", " + RESTConstantHttp.ACCESS_CONTROL_ALLOW_ORIGIN + " ,Token");
+                RESTConstantHttp.HEADER_CONTENT_TYPE + ", " + RESTConstantHttp.ACCESS_CONTROL_ALLOW_ORIGIN + " ," + RESTConstantHttp.HEADER_AUTHORIZATION);
     }
 
     /**
@@ -36,8 +36,6 @@ public class RESTHandle {
         resp.setHeader(RESTConstantHttp.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         resp.setHeader(RESTConstantHttp.ACCESS_CONTROL_ALLOW_METHODS,
                 RESTStringUtil.joinCollectionString(acceptMethods, ","));
-        resp.setHeader(RESTConstantHttp.ACCESS_CONTROL_ALLOW_HEADERS,
-                RESTConstantHttp.HEADER_CONTENT_TYPE + ", " + RESTConstantHttp.ACCESS_CONTROL_ALLOW_ORIGIN + ", Token");
     }
 
 }

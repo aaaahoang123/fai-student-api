@@ -15,11 +15,6 @@ public class RESTResponseError extends RESTResponse {
 
 	public RESTResponseError(RESTGeneralError define) {
 		this.code = define.code();
-		if (this.errors == null) {
-			this.errors = new ArrayList<RESTError>();
-		}
-		this.errors.add(new RESTError.Builder().setCode(String.valueOf(define.code())).setTitle(define.description())
-				.setDetail(define.description()).build());
 	}
 
 	@Override
@@ -41,7 +36,7 @@ public class RESTResponseError extends RESTResponse {
 	public void doResponse(HttpServletResponse resp) throws IOException {
 		buildResponseDocument();
 		build(resp);
-		resp.getWriter().println("loi roi haha " + RESTJsonUtil.GSON.toJson(this.document));
+		resp.getWriter().println(RESTJsonUtil.GSON.toJson(this.document));
 	}
 
 	/**

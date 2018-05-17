@@ -25,7 +25,7 @@ public class StudentsServlet extends HttpServlet {
     static {
         arrayAccept.add("GET");
         arrayAccept.add("OPTIONS");
-        arrayAccept.add("HEAD");
+        arrayAccept.add("DELETE");
         arrayAccept.add("PUT");
         arrayAccept.add("POST");
     }
@@ -47,7 +47,7 @@ public class StudentsServlet extends HttpServlet {
         student.setStatus(1);
         List<RESTError> lErrors = Validator.getInstance().validateStudent(student);
         if (lErrors.size() > 0) {
-            RESTFactory.make(RESTGeneralError.FORBIDDEN).putErrors(lErrors).doResponse(resp);
+            RESTFactory.make(RESTGeneralError.BAD_REQUEST).putErrors(lErrors).doResponse(resp);
             return;
         }
         if (Validator.checkRollnumerExist(student.getRollNumber())) {
@@ -93,7 +93,7 @@ public class StudentsServlet extends HttpServlet {
         List<Student> lStudent = query.limit(limit).offset((page - 1) * limit).list();
 
         RESTFactory.make(RESTGeneralSuccess.OK).putData(lStudent).putMeta("totalPage", totalPage)
-                .putMeta("totalItem", totalItem).putMeta("page", page).doResponse(resp);
+                .putMeta("totalItem", totalItem).putMeta("page", page).putMeta("limit", limit).doResponse(resp);
     }
 
     private void getOne(HttpServletRequest req, HttpServletResponse resp, String path) throws IOException {
