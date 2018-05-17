@@ -10,10 +10,8 @@ import entity.Student;
 import entity.error.ErrorAPI;
 import entity.error.ErrorResource;
 import entity.json.RESTSingleResource;
-import entity.json.JsonResource;
 import utility.RESTFactory;
 import utility.Validator;
-
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
