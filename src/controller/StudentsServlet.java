@@ -2,113 +2,84 @@ package controller;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
-import abstracts.JsonObject;
-import com.google.appengine.repackaged.com.google.gson.Gson;
+import com.google.gson.Gson;
+import com.googlecode.objectify.cmd.Query;
+import design_java_rest.RESTFactory;
+import design_java_rest.RESTGeneralError;
+import design_java_rest.RESTGeneralSuccess;
+import design_java_rest.RESTHandle;
+import design_java_rest.entity.RESTDocumentSingle;
+import design_java_rest.entity.RESTError;
 import entity.Student;
-import entity.error.ErrorAPI;
-import entity.error.ErrorResource;
-import entity.json.JOMultiResource;
-import entity.json.JOSingleResource;
-import entity.json.JsonResource;
 import utility.Validator;
-import utility.BodyParser;
-
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class StudentsServlet extends HttpServlet {
-    Gson gson = new Gson();
+    private static ArrayList<String> arrayAccept = new ArrayList<>();
+    static {
+        arrayAccept.add("GET");
+        arrayAccept.add("OPTIONS");
+        arrayAccept.add("HEAD");
+        arrayAccept.add("PUT");
+        arrayAccept.add("POST");
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doOptions(req, resp);
-        Map<String, Object> attr = null;
-        String rollNumber, name, email, phone, address, avatar;
-        int gender, status;
-        long birthday, nowMls;
+        RESTHandle.passRequest(resp,arrayAccept);
+        Student student;
         try {
-
-            attr = gson.fromJson(BodyParser.parseBody(req), JOSingleResource.class).getData().getAttributes();
-            rollNumber = attr.get("rollNumber").toString();
-            name = attr.get("name").toString();
-            email = attr.get("email").toString();
-            phone = attr.get("phone").toString();
-            address = attr.get("address").toString();
-            if (!attr.get("gender").getClass().getSimpleName().equals("Double"))
-                throw new ClassCastException("Gender must be integer");
-            gender = (int) Math.floor((double) attr.get("gender"));
-            if (!attr.get("birthday").getClass().getSimpleName().equals("Double"))
-                throw new ClassCastException("Birthday must be long");
-            birthday = (long) Math.floor((double) attr.get("birthday"));
-            avatar = attr.get("avatar").toString();
+            RESTDocumentSingle documentSingle = RESTDocumentSingle.getInstanceFromRequest(req);
+            student = documentSingle.getData().getInstance(Student.class);
         } catch (Exception e) {
-            ErrorAPI errorAPI = new ErrorAPI();
-            errorAPI.addRs(ErrorResource.getInstance("400", "Format Data invalid", e.getMessage()));
-            resp.setStatus(400);
-            resp.getWriter().print(gson.toJson(errorAPI));
+            RESTFactory.make(RESTGeneralError.BAD_REQUEST).putErrors(RESTGeneralError.BAD_REQUEST.code(), "Format Data invalid",e.getMessage()).doResponse(resp);
             return;
         }
-
-        nowMls = System.currentTimeMillis();
-        status = 1;
-
-        Student s = new Student(nowMls, rollNumber, name, gender, email, phone, address, birthday, avatar, nowMls, nowMls, status);
-        List<ErrorResource> lErrors = Validator.getInstance().validateStudent(s);
-        ErrorAPI errorAPI = new ErrorAPI();
+        student.setId(System.currentTimeMillis());
+        student.setCreatedAt(System.currentTimeMillis());
+        student.setUpdatedAt(System.currentTimeMillis());
+        student.setStatus(1);
+        List<RESTError> lErrors = Validator.getInstance().validateStudent(student);
         if (lErrors.size() > 0) {
-            errorAPI.setErrors(lErrors);
-            resp.setStatus(400);
-            resp.getWriter().print(gson.toJson(errorAPI));
+            RESTFactory.make(RESTGeneralError.FORBIDDEN).putErrors(lErrors).doResponse(resp);
             return;
         }
-        if (Validator.checkRollnumerExist(s.getRollNumber())) {
-            errorAPI.addRs(ErrorResource.getInstance("409", "Rollnumber Conflict", "RollNumber existed"));
-            resp.setStatus(409);
-            resp.getWriter().print(gson.toJson(errorAPI));
+        if (Validator.checkRollnumerExist(student.getRollNumber())) {
+            RESTFactory.make(RESTGeneralError.CONFLICT).putErrors(RESTGeneralError.CONFLICT.code(), "RollNumber Conflict", "RollNUmber existed");
             return;
         }
-        ofy().save().entity(s).now();
-        JOSingleResource jsr = new JOSingleResource();
-        jsr.setData(JsonResource.getInstance(s));
-        resp.setStatus(201);
-        resp.getWriter().print(gson.toJson(jsr));
+        ofy().save().entity(student).now();
+        RESTFactory.make(RESTGeneralSuccess.CREATED).putData(student).doResponse(resp);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        RESTHandle.passRequest(resp,arrayAccept);
         String path;
         if (req.getPathInfo() == null) path = "";
         else path = req.getPathInfo().substring(1);
-        JsonObject jo;
+
         if (path.equals("")) {
-            jo = getList(req, resp);
+            getList(req, resp);
         }
         else {
-            jo = getOne(req, resp, path);
+            getOne(req, resp, path);
         }
-
-        doOptions(req, resp);
-        resp.getWriter().write(gson.toJson(jo));
     }
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods","GET, OPTIONS, HEAD, PUT, POST");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Origin, Token");
+        RESTHandle.doOption(resp, arrayAccept);
     }
 
-    private JsonObject getList(HttpServletRequest req, HttpServletResponse resp) {
-        int limit = 10, page = 1, total;
+    private void getList(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        int limit = 10, page = 1, totalItem, totalPage;
         String temp;
         try {
             if ((temp = req.getParameter("page")) != null) page = Integer.parseInt(temp);
@@ -116,39 +87,28 @@ public class StudentsServlet extends HttpServlet {
         } catch (Exception e) {
             System.err.println("Failed when parse the parameter!");
         }
+        Query<Student> query = ofy().load().type(Student.class).filter("status", 1);
+        totalItem = query.count();
+        totalPage = (int) Math.ceil((double)totalItem/limit);
+        List<Student> lStudent = query.limit(limit).offset((page - 1) * limit).list();
 
-        List<Student> ls = ofy().load().type(Student.class).limit(limit).offset((page - 1) * limit).list();
-        total = ofy().load().type(Student.class).count();
-        List<JsonResource> ljr = new ArrayList<>();
-        for (Student s : ls) {
-            ljr.add(JsonResource.getInstance(s));
-        }
-
-        HashMap<String, Object> meta = new HashMap<>();
-        meta.put("limit", limit);
-        meta.put("page", page);
-        meta.put("total", total);
-
-        JsonObject<List<JsonResource>> jo = new JOMultiResource();
-        jo.setData(ljr);
-        jo.setMeta(meta);
-
-        return jo;
+        RESTFactory.make(RESTGeneralSuccess.OK).putData(lStudent).putMeta("totalPage", totalPage)
+                .putMeta("totalItem", totalItem).putMeta("page", page).doResponse(resp);
     }
 
-    private JsonObject getOne(HttpServletRequest req, HttpServletResponse resp, String path) throws IOException {
+    private void getOne(HttpServletRequest req, HttpServletResponse resp, String path) throws IOException {
         long id;
         try {
             id = Long.parseLong(path);
         } catch (Exception e) {
-            resp.getWriter().print("Invalid id! Error when parse the id!");
-            return null;
+            RESTFactory.make(RESTGeneralError.NOT_FOUND).putErrors(RESTGeneralError.NOT_FOUND.code(), "Not Found", "Not Found").doResponse(resp);
+            return;
         }
-
-        Student s = ofy().load().type(Student.class).id(id).now();
-
-        JsonObject<JsonResource> jo = new JOSingleResource();
-        jo.setData(JsonResource.getInstance(s));
-        return jo;
+        Student student = ofy().load().type(Student.class).id(id).now();
+        if(student == null){
+            RESTFactory.make(RESTGeneralError.NOT_FOUND).putErrors(RESTGeneralError.NOT_FOUND.code(), "Student not exist or deleted", "").doResponse(resp);
+            return;
+        }
+        RESTFactory.make(RESTGeneralSuccess.OK).putData(student).doResponse(resp);
     }
 }

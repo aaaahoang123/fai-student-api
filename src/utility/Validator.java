@@ -1,10 +1,8 @@
 package utility;
 
 import com.googlecode.objectify.ObjectifyService;
+import design_java_rest.entity.RESTError;
 import entity.Student;
-import entity.error.ErrorAPI;
-import entity.error.ErrorResource;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,55 +11,55 @@ public class Validator {
     public static Validator getInstance(){
         return new Validator();
     }
-    public List<ErrorResource> validateStudent(Student student) {
-        List<ErrorResource> listError = new ArrayList<>();
+    public List<RESTError> validateStudent(Student student) {
+        List<RESTError> listError = new ArrayList<>();
 
         // validate rollnumber
         if (checkNull(student.getRollNumber())) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber not null."));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Rollnumber").setDetail("Rollnumber not null.").build());
         } else if (!checkCharacter(student.getRollNumber(), "[A-Za-z0-9]+")) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber include only: 0-9,A-Z, a-z"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Rollnumber").setDetail("Rollnumber include only: 0-9,A-Z, a-z").build());
         } else if (!checkLength(student.getRollNumber(), 6)) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Rollnumber", "Rollnumber must have at least 6 character."));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Rollnumber").setDetail("Rollnumber must have at least 6 character.").build());
         }
 
         // validate name
         if (checkNull(student.getName())) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Name", "Name not null"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Name").setDetail("Name not null").build());
         } else if (!checkCharacter(student.getName(), "[\\p{L}\\s]+")) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Name", "Name include only: a-z, A-Z, space"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Name").setDetail("Name include only: a-z, A-Z, space").build());
         } else if (!checkLength(student.getName(), 5)) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Name", "Name must have least at 5 character"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Name").setDetail("Name must have least at 5 character").build());
         }
 
         // validate gender
-        if (student.getGender() != 0 && student.getGender() != 1) {
-            listError.add(ErrorResource.getInstance("400", "Invalid Gender", "Gender must 0 or 1"));
+        if (student.getGender() != 0 && student.getGender() != 1 && student.getGender() != 2) {
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Gender").setDetail("Gender must 0 or 1 or 2").build());
         }
 
         // validate email
         if(checkNull(student.getEmail())){
-            listError.add(ErrorResource.getInstance("400", "Invalid Email","Email not null"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Email").setDetail("Email not null").build());
         }else if(!checkCharacter(student.getEmail(), "^([a-zA-Z0-9_\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9]{2,4})+$")){
-            listError.add(ErrorResource.getInstance("400", "Invalid Email", "Email invalid, ex valid: example@has.com"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Email").setDetail("Email invalid, ex valid: example@has.com").build());
         }
 
         //validate phone
         if(checkNull(student.getPhone())){
-            listError.add(ErrorResource.getInstance("400","Invalid Phone", "Phone not null"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Phone").setDetail("Phone not null").build());
         }else if(!checkCharacter(student.getPhone(),"[0-9\\s]+")){
-            listError.add(ErrorResource.getInstance("400", "Invalid Phone", "Phone include only 0-9,space"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Phone").setDetail("Phone include only 0-9,space").build());
         }else if(!checkLength(student.getPhone(),10)){
-            listError.add(ErrorResource.getInstance("400", "Invalid Phone","Phone must have least at 10 character"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Phone").setDetail("Phone must have least at 10 character").build());
         }
 
         //validate address
         if(checkNull(student.getAddress())){
-            listError.add(ErrorResource.getInstance("400","Invalid Address", "Address not null"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Address").setDetail("Gender must 0 or 1 or 2").build());
         }else if(!checkCharacter(student.getAddress(),"[\\p{L}0-9\\s\\/\\-]+")){
-            listError.add(ErrorResource.getInstance("400", "Invalid Address", "Address include only A-Z,a-z,0-9,space,-,/"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Address").setDetail("Address include only A-Z,a-z,0-9,space,-,/").build());
         }else if(!checkLength(student.getAddress(),10)){
-            listError.add(ErrorResource.getInstance("400", "Invalid Address","Address must have least at 10 character"));
+            listError.add(new RESTError.Builder().setCode("400").setTitle("Invalid Address").setDetail("Address must have least at 10 character").build());
         }
 
         //validate birthday

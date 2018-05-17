@@ -20,7 +20,9 @@ public class Student {
     private String avatar;
     @Index
     private long createdAt;
+    @Index
     private long updatedAt;
+    @Index
     private int status;
 
     public Student() {}
@@ -135,4 +137,5 @@ public class Student {
     public void setAvatar(String avatar) {
         this.avatar = avatar;
     }
+
 }

@@ -1,14 +1,11 @@
 package controller;
 
-
-
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
-
-import com.google.appengine.repackaged.com.google.gson.Gson;
-import entity.error.ErrorAPI;
-import entity.error.ErrorResource;
+import com.google.gson.Gson;
+import design_java_rest.RESTFactory;
+import design_java_rest.RESTGeneralError;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,7 +15,6 @@ import java.io.IOException;
 
 public class UploadServlet extends HttpServlet {
     BlobstoreService bs = BlobstoreServiceFactory.getBlobstoreService();
-    Gson gson = new Gson();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.getWriter().print(bs.createUploadUrl("/api/upload"));
@@ -28,9 +24,7 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         BlobKey bk = bs.getUploads(req).get("myImg").get(0);
         if (bk == null) {
-            ErrorAPI err = new ErrorAPI();
-            err.addRs(ErrorResource.getInstance("500", "Server Error!", "Can not upload file!"));
-            resp.getWriter().print(gson.toJson(err));
+            RESTFactory.make(RESTGeneralError.DATASTORE_ERROR).putErrors(RESTGeneralError.DATASTORE_ERROR.code(), "Server Error!", "Can not upload file!");
             return;
         }
         String result = req.getRequestURL().toString().replace(req.getRequestURI(), "/api/show-file/") + bk.getKeyString();
