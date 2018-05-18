@@ -1,9 +1,11 @@
 package entity.error;
 
+import abstracts.RESTResponseDocument;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class ErrorAPI {
+public class ErrorAPI implements RESTResponseDocument {
     private List<ErrorResource> errors;
 
     public ErrorAPI() {

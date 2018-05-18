@@ -5,8 +5,8 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 
-import entity.error.ErrorAPI;
 import com.google.gson.Gson;
+import entity.error.ErrorAPI;
 import entity.error.ErrorResource;
 
 import javax.servlet.ServletException;
@@ -20,11 +20,13 @@ public class UploadServlet extends HttpServlet {
     Gson gson = new Gson();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doOptions(req, resp);
         resp.getWriter().print(bs.createUploadUrl("/api/upload"));
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doOptions(req, resp);
         BlobKey bk = bs.getUploads(req).get("myImg").get(0);
         if (bk == null) {
             ErrorAPI err = new ErrorAPI();
@@ -34,5 +36,13 @@ public class UploadServlet extends HttpServlet {
         }
         String result = req.getRequestURL().toString().replace(req.getRequestURI(), "/api/show-file/") + bk.getKeyString();
         resp.getWriter().write(result);
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods","GET, OPTIONS, HEAD, PUT, POST");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Origin, Token");
     }
 }

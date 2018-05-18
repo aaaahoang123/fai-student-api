@@ -12,15 +12,23 @@ public class Student {
     private String rollNumber;
     @Index
     private String name;
+    @Index
     private int gender;
+    @Index
     private String email;
+    @Index
     private String phone;
+    @Index
     private String address;
+    @Index
     private long birthday;
+
     private String avatar;
     @Index
     private long createdAt;
+    @Index
     private long updatedAt;
+    @Index
     private int status;
 
     public Student() {}
