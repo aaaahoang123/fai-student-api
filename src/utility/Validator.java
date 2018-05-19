@@ -2,7 +2,6 @@ package utility;
 
 import com.googlecode.objectify.ObjectifyService;
 import entity.Student;
-import entity.error.ErrorAPI;
 import entity.error.ErrorResource;
 
 import java.util.ArrayList;

@@ -43,7 +43,6 @@ public class RESTSuccessResponser extends RESTResponser {
         return this;
     }
 
-    @Override
     public <T> RESTSuccessResponser addData(T object) {
         if (this.data == null) this.data = new ArrayList<>();
         this.data.add(JsonResource.getExposeInstance(object));

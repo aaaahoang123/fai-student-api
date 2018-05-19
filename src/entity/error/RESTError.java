@@ -5,10 +5,10 @@ import abstracts.RESTResponseDocument;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ErrorAPI implements RESTResponseDocument {
+public class RESTError implements RESTResponseDocument {
     private List<ErrorResource> errors;
 
-    public ErrorAPI() {
+    public RESTError() {
     }
 
     public void addRs(ErrorResource resource){
@@ -16,7 +16,7 @@ public class ErrorAPI implements RESTResponseDocument {
         errors.add(resource);
     }
 
-    public ErrorAPI(List<ErrorResource> errors) {
+    public RESTError(List<ErrorResource> errors) {
         this.errors = errors;
     }
 

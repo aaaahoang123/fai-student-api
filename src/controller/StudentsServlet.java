@@ -4,10 +4,11 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 
 import abstracts.JsonObject;
 
+import abstracts.RESTGeneralError;
 import abstracts.RESTGeneralSuccess;
 import com.google.gson.Gson;
 import entity.Student;
-import entity.error.ErrorAPI;
+import entity.error.RESTError;
 import entity.error.ErrorResource;
 import entity.json.RESTSingleResource;
 import utility.RESTFactory;
@@ -30,10 +31,7 @@ public class StudentsServlet extends HttpServlet {
         try {
             s = RESTSingleResource.getInstanceFromRequest(req).getData().getInstance(Student.class);
         } catch (Exception e) {
-            ErrorAPI errorAPI = new ErrorAPI();
-            errorAPI.addRs(ErrorResource.getInstance("400", "Format Data invalid", e.getMessage()));
-            resp.setStatus(400);
-            resp.getWriter().print(gson.toJson(errorAPI));
+            RESTFactory.make(RESTGeneralError.BAD_REQUEST).addError(e.getMessage()).doResponse(resp);
             return;
         }
 
@@ -46,17 +44,12 @@ public class StudentsServlet extends HttpServlet {
             s.setStatus(status);
         }
         List<ErrorResource> lErrors = Validator.getInstance().validateStudent(s);
-        ErrorAPI errorAPI = new ErrorAPI();
         if (lErrors.size() > 0) {
-            errorAPI.setErrors(lErrors);
-            resp.setStatus(400);
-            resp.getWriter().print(gson.toJson(errorAPI));
+            RESTFactory.make(RESTGeneralError.BAD_REQUEST).setError(lErrors).doResponse(resp);
             return;
         }
         if (Validator.checkRollnumerExist(s.getRollNumber())) {
-            errorAPI.addRs(ErrorResource.getInstance("409", "Rollnumber Conflict", "RollNumber existed"));
-            resp.setStatus(409);
-            resp.getWriter().print(gson.toJson(errorAPI));
+            RESTFactory.make(RESTGeneralError.CONFLICT).addError("409", "Rollnumber Conflict", "RollNumber existed").doResponse(resp);
             return;
         }
         ofy().save().entity(s).now();
@@ -69,7 +62,6 @@ public class StudentsServlet extends HttpServlet {
         String path;
         if (req.getPathInfo() == null) path = "";
         else path = req.getPathInfo().substring(1);
-        JsonObject jo;
         if (path.equals("")) {
             getList(req, resp);
         }
@@ -111,10 +103,15 @@ public class StudentsServlet extends HttpServlet {
         try {
             id = Long.parseLong(path);
         } catch (Exception e) {
-            resp.getWriter().print("Invalid id! Error when parse the id!");
+            RESTFactory.make(RESTGeneralError.BAD_REQUEST).addError("Invalid id! Error when parse the id!").doResponse(resp);
             return;
         }
         Student s = ofy().load().type(Student.class).id(id).now();
+        System.out.println(s);
+        if (s == null) {
+            RESTFactory.make(RESTGeneralError.NOT_FOUND).addError("There is no student with this id").doResponse(resp);
+            return;
+        }
         RESTFactory.make(RESTGeneralSuccess.OK).addData(s).doResponse(resp);
     }
 }

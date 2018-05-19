@@ -14,10 +14,6 @@ public abstract class RESTResponser {
 
     public RESTResponser() {}
 
-    public RESTResponser(RESTGeneralSuccess define) {
-        this.code = define.code();
-    }
-
     public void setCode(int code) {
         this.code = code;
     }
@@ -31,8 +27,6 @@ public abstract class RESTResponser {
     }
 
     void build(HttpServletResponse res) {
-        res.setContentType(this.contentType);
-        res.setCharacterEncoding(this.encode);
         res.setStatus(this.code);
     }
 
@@ -49,5 +43,4 @@ public abstract class RESTResponser {
         return this;
     }
 
-    public abstract <T> RESTResponser addData(T t);
 }
